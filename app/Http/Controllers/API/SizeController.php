@@ -1,9 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
 use App\Models\Size;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use App\Http\Resources\SizeResource;
+use Illuminate\Support\Facades\Validator;
 
 class SizeController extends Controller
 {
@@ -12,23 +15,28 @@ class SizeController extends Controller
      */
     public function index()
     {
-        //
+        $size = Size::all();
+        return SizeResource::collection($size);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
+
 
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
-        //
+        $validator = Validator::make($request->all(),[
+            'name' => 'required|string|max:255',
+            'category_id' => 'required|exists:categories,id',
+            'description' => 'required|string|max:255'
+        ]);
+
+        if($validator->fails()){
+            return response()->json(['error' => $validator->errors()],422);
+        }
+        $size = Size::create($validator->validated());
+        return new SizeResource($size);
     }
 
     /**
@@ -36,23 +44,28 @@ class SizeController extends Controller
      */
     public function show(Size $size)
     {
-        //
+
+        return new SizeResource($size);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Size $size)
-    {
-        //
-    }
+
 
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, Size $size)
     {
-        //
+        $validator = Validator::make($request->all(),[
+            'name' => 'sometimes|required|string|max:255',
+            'category_id' => 'sometimes|required|exists:categories,id',
+            'description' => 'sometimes|required|string|max:255'
+        ]);
+
+        if($validator->fails()){
+            return response()->json(['error' => $validator->errors()],422);
+        }
+        $size->update($validator->validated());
+        return new SizeResource($size);
     }
 
     /**
@@ -60,6 +73,7 @@ class SizeController extends Controller
      */
     public function destroy(Size $size)
     {
-        //
+        $size->delete();
+        return response()->json(['message' => 'Size deleted successfully']);
     }
 }

@@ -1,9 +1,13 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
+use App\Http\Controllers\Controller;
+use App\Http\Resources\ProductConditionResource;
+
 
 use App\Models\ProductCondition;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class ProductConditionController extends Controller
 {
@@ -12,23 +16,27 @@ class ProductConditionController extends Controller
      */
     public function index()
     {
-        //
+        return ProductConditionResource::collection(ProductCondition::all());
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
 
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
-        //
+        $validator = Validator::make($request->all(),[
+            'name' => 'required|string|max:50',
+            'description' => 'nullable|max:255',
+        ]);
+
+        if($validator->fails()){
+            return response()->json(['errors'=> $validator->errors()],422);
+        }
+
+        $productCondition = ProductCondition::create($validator->validated());
+
+        return new ProductConditionResource($productCondition);
     }
 
     /**
@@ -36,23 +44,28 @@ class ProductConditionController extends Controller
      */
     public function show(ProductCondition $productCondition)
     {
-        //
+        return new ProductConditionResource($productCondition);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(ProductCondition $productCondition)
-    {
-        //
-    }
+
 
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, ProductCondition $productCondition)
     {
-        //
+        $validator = Validator::make($request->all(),[
+            'name' => 'sometimes|required|string|max:50',
+            'description' => 'sometimes|required|string|max:255',
+        ]);
+
+        if($validator->fails()){
+            return response()->json(['errors'=> $validator->errors()],422);
+        }
+
+        $productCondition->update($validator->validated());
+
+        return new ProductConditionResource($productCondition);
     }
 
     /**
@@ -60,6 +73,7 @@ class ProductConditionController extends Controller
      */
     public function destroy(ProductCondition $productCondition)
     {
-        //
+        $productCondition->delete();
+        return response()->json(['message' => 'Product Conditions row successfully deleted']);
     }
 }
